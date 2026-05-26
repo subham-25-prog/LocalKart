@@ -1,0 +1,126 @@
+datasource db {
+  provider = "sqlite"
+  // url is defined in prisma.config.ts
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Store {
+  id            String         @id @default(uuid())
+  googlePlaceId String?        @unique @map("google_place_id")
+  name          String
+  type          String         // e.g., "Grocery Store", "Pharmacy", "Electronics"
+  address       String
+  latitude      Float          @map("lat")
+  longitude     Float          @map("lng")
+  phone         String
+  whatsapp      String?
+  rating        Float          @default(4.0)
+  reviewsCount  Int            @default(0)
+  logo          String         // image/SVG representation
+  banner        String         // banner image/gradient styling
+  openTime      String         // e.g. "08:00 AM"
+  closeTime     String         // e.g. "10:00 PM"
+  verified      Boolean        @default(true)
+  category      String?
+  image         String?
+  openNow       Boolean?       @map("open_now")
+  products      StoreProduct[]
+  reviews       Review[]
+  orders        Order[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+}
+
+model Product {
+  id           String   @id @default(uuid())
+  barcode      String   @unique
+  name         String
+  description  String
+  image        String
+  category     String   // e.g., "Grocery", "Electronics", "Pharmacy", "Dairy"
+  brand        String
+  price        Decimal  // seller price
+  stock        Int      @default(0)
+  discount     Decimal? // optional discount
+  packaging    String?  // optional packaging details (e.g. "Pack of 12", "400g")
+  sellerId     String   // reference to User (seller)
+  seller       User     @relation(fields: [sellerId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  storeProducts StoreProduct[] // reverse relation for store-product linking
+}
+
+model StoreProduct {
+  id          String   @id @default(uuid())
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  storeId     String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId   String
+  price       Float    // Local pricing variation
+  stockCount  Int      @default(0)
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([storeId, productId])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  storeId   String
+  userName  String
+  rating    Float
+  comment   String
+  date      String   // E.g. "2 days ago"
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String
+  phone       String
+  password    String
+  role        String   // "buyer" or "seller"
+  membership  String   @default("Silver Explorer")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  products    Product[] // reverse relation for seller's products
+}
+
+enum DeliveryMethod {
+  DELIVERY
+  PICKUP
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  storeId         String
+  store           Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  buyerName       String
+  buyerPhone      String
+  buyerEmail      String?
+  address         String
+  total           Float
+  deliveryMethod  DeliveryMethod @default(DELIVERY)
+  deliveryFee     Float          @default(0)
+  status          String      // "Received", "Preparing", "Dispatched", "Delivered"
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  productName String
+  price       Float
+  quantity    Int
+}
+
