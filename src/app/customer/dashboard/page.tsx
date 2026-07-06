@@ -102,7 +102,9 @@ export default function CustomerDashboard() {
         if (storesRaw) {
           try {
             setSavedStoresCount(JSON.parse(storesRaw).length);
-          } catch (e) {}
+          } catch (e) {
+            console.warn('Failed to parse saved stores count:', e);
+          }
         } else {
           setSavedStoresCount(3); // Mock default
         }
@@ -111,7 +113,9 @@ export default function CustomerDashboard() {
         if (prodsRaw) {
           try {
             setSavedProductsCount(JSON.parse(prodsRaw).length);
-          } catch (e) {}
+          } catch (e) {
+            console.warn('Failed to parse saved products count:', e);
+          }
         } else {
           setSavedProductsCount(2); // Mock default
         }
@@ -148,7 +152,9 @@ export default function CustomerDashboard() {
                 setActiveTrackingStatus(null);
               }
             }
-          } catch (e) {}
+          } catch (e) {
+            console.warn('Failed to parse vendor orders for active tracking:', e);
+          }
         }
       }
     }, 0);

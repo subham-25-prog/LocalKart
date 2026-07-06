@@ -890,7 +890,9 @@ export default function Header() {
                       const savedUsersRaw = localStorage.getItem('localkart_registered_users');
                       let registeredUsers = [];
                       if (savedUsersRaw) {
-                        try { registeredUsers = JSON.parse(savedUsersRaw); } catch (err) {}
+                        try { registeredUsers = JSON.parse(savedUsersRaw); } catch (err) {
+                          console.warn('Failed to parse locally registered users backup:', err);
+                        }
                       }
                       if (!registeredUsers.some((u: any) => u.email === emailKey)) {
                         registeredUsers.push({
@@ -955,7 +957,9 @@ export default function Header() {
                     const savedUsersRaw = localStorage.getItem('localkart_registered_users');
                     let registeredUsers = [];
                     if (savedUsersRaw) {
-                      try { registeredUsers = JSON.parse(savedUsersRaw); } catch (e) {}
+                      try { registeredUsers = JSON.parse(savedUsersRaw); } catch (e) {
+                        console.warn('Failed to parse locally registered users backup:', e);
+                      }
                     }
 
                     if (isRegistering) {
