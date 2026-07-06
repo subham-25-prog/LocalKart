@@ -20,6 +20,14 @@ import {
 } from 'lucide-react';
 import { getCart, getCartSummary, clearCart, Cart } from '@/lib/cart';
 import { toast } from '@/lib/toast';
+import StoreLocationMap from '@/components/StoreLocationMap';
+
+interface PickupStore {
+  name: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+}
 
 export default function FastCheckoutFlow() {
   const router = useRouter();
@@ -86,6 +94,67 @@ export default function FastCheckoutFlow() {
     platformFee: 0,
     total: 0
   });
+
+  // Exact location of the store to pick up from (loaded on demand for PICKUP)
+  const [pickupStore, setPickupStore] = useState<PickupStore | null>(null);
+  const [isLoadingPickupStore, setIsLoadingPickupStore] = useState(false);
+
+  // When the buyer chooses to pick up from the store, load that store's exact
+  // coordinates so we can show a map of the specific store.
+  useEffect(() => {
+    if (deliveryMethod !== 'PICKUP') return;
+    const storeId = cart?.storeId;
+    if (!storeId) {
+      setPickupStore(null);
+      return;
+    }
+    if (pickupStore && pickupStore.name === cart?.storeName) return;
+
+    let cancelled = false;
+    const loadPickupStore = async () => {
+      setIsLoadingPickupStore(true);
+
+      let userLat = 12.9716;
+      let userLng = 77.6400;
+      let dbMode = 'mock';
+      if (typeof window !== 'undefined') {
+        dbMode = localStorage.getItem('localkart_db_override') || 'mock';
+        const savedLoc = localStorage.getItem('localkart_location');
+        if (savedLoc) {
+          try {
+            const parsed = JSON.parse(savedLoc);
+            if (typeof parsed.lat === 'number') userLat = parsed.lat;
+            if (typeof parsed.lng === 'number') userLng = parsed.lng;
+          } catch { /* ignore malformed cached location */ }
+        }
+      }
+
+      try {
+        const res = await fetch(`/api/stores/${storeId}?lat=${userLat}&lng=${userLng}&db_mode=${dbMode}`);
+        const data = await res.json();
+        if (!cancelled && data.success && data.store) {
+          setPickupStore({
+            name: data.store.name || cart?.storeName || 'Selected Store',
+            address: data.store.address,
+            latitude: data.store.latitude,
+            longitude: data.store.longitude,
+          });
+        } else if (!cancelled) {
+          setPickupStore({ name: cart?.storeName || 'Selected Store' });
+        }
+      } catch (e) {
+        console.warn('Failed to load pickup store location:', e);
+        if (!cancelled) setPickupStore({ name: cart?.storeName || 'Selected Store' });
+      } finally {
+        if (!cancelled) setIsLoadingPickupStore(false);
+      }
+    };
+
+    loadPickupStore();
+    return () => {
+      cancelled = true;
+    };
+  }, [deliveryMethod, cart?.storeId, cart?.storeName, pickupStore]);
 
   useEffect(() => {
      const cartData = getCart();
@@ -324,6 +393,16 @@ return (
               </div>
                         
               <DeliveryToggle />
+
+              {deliveryMethod === 'PICKUP' && (
+                <StoreLocationMap
+                  storeName={pickupStore?.name || cart?.storeName || 'Selected Store'}
+                  address={pickupStore?.address}
+                  latitude={pickupStore?.latitude}
+                  longitude={pickupStore?.longitude}
+                  loading={isLoadingPickupStore}
+                />
+              )}
             </div>
             {/* Right Column: Order summary & Proceed */}
             <div className="space-y-4">
@@ -403,6 +482,15 @@ return (
                 <h4 className="text-sm font-semibold text-zinc-300">Select Delivery Option</h4>
                 <DeliveryToggle />
               </div>
+              {deliveryMethod === 'PICKUP' && (
+                <StoreLocationMap
+                  storeName={pickupStore?.name || cart?.storeName || 'Selected Store'}
+                  address={pickupStore?.address}
+                  latitude={pickupStore?.latitude}
+                  longitude={pickupStore?.longitude}
+                  loading={isLoadingPickupStore}
+                />
+              )}
               <div className="bg-zinc-900/60 border border-zinc-850 rounded-2xl p-5 space-y-5 shadow-sm">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-orange-500" />
@@ -532,6 +620,16 @@ return (
                 <p className="text-xs text-zinc-400">
                   Your order is prepared. Please visit the store to collect your items.
                 </p>
+                {pickupStore && (
+                  <StoreLocationMap
+                    className="text-left"
+                    storeName={pickupStore.name}
+                    address={pickupStore.address}
+                    latitude={pickupStore.latitude}
+                    longitude={pickupStore.longitude}
+                    loading={isLoadingPickupStore}
+                  />
+                )}
                 <button
                   onClick={() => router.push(`/stores/${cart?.storeId || ''}`)}
                   className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl transition shadow cursor-pointer"

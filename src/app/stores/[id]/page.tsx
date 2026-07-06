@@ -9,11 +9,9 @@ import {
   Clock,
   Phone,
   MessageCircle,
-  Navigation,
   ArrowLeft,
   CheckCircle,
   Search,
-  Map,
   PlusCircle,
   Share2,
   Calendar,
@@ -29,6 +27,7 @@ import { calculateDistance } from '@/lib/geo';
 import { STORES, PRODUCTS, STORE_PRODUCTS, REVIEWS } from '@/lib/mockData';
 import { getCart, addToCart, updateCartQty, clearCart, Cart } from '@/lib/cart';
 import { toast } from '@/lib/toast';
+import StoreLocationMap from '@/components/StoreLocationMap';
 
 interface Store {
   id: string;
@@ -613,6 +612,16 @@ const { handleCheckout } = useAuthCheckout();
 
         </div>
 
+        {/* Right Column: exact store location on a live map */}
+        <div className="space-y-4">
+          <StoreLocationMap
+            storeName={store.name}
+            address={store.address}
+            latitude={store.latitude}
+            longitude={store.longitude}
+          />
+        </div>
+
       </div>}
 
       {activeTab === 'reviews' && (
@@ -679,55 +688,6 @@ const { handleCheckout } = useAuthCheckout();
         </div>
       )}
 
-      {activeTab === 'products' && (
-        <div className="hidden">
-          <div className="glass-card rounded-3xl p-5 space-y-4 border-zinc-900">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-              <Map className="w-4 h-4 text-orange-500" />
-              Store Coordinates
-            </h3>
-
-            {/* Google Maps Iframe Mock Map Preview */}
-            <div className="h-44 w-full rounded-2xl border border-zinc-900 bg-zinc-950 flex flex-col items-center justify-center p-4 text-center space-y-2 relative overflow-hidden shadow-inner group">
-              <div className="absolute inset-0 bg-cover bg-center opacity-10 filter blur-xs group-hover:scale-102 transition-transform" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=400')" }} />
-              <div className="w-8 h-8 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center text-orange-550 shadow relative z-10 shrink-0">
-                <MapPin className="w-4.5 h-4.5 text-orange-550" />
-              </div>
-              <div className="relative z-10">
-                <p className="text-xs font-black text-white truncate max-w-[200px]">
-                  {store.name}
-                </p>
-                <p className="text-[10px] text-zinc-500 mt-0.5 font-medium">
-                  ({store.latitude.toFixed(4)}, {store.longitude.toFixed(4)})
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-1.5 pt-1">
-              <span className="text-[9px] text-zinc-550 font-bold uppercase tracking-wider block">Physical Address</span>
-              <p className="text-xs text-zinc-350 font-medium leading-relaxed">
-                {store.address}
-              </p>
-            </div>
-
-            <div className="pt-2">
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${store.latitude},${store.longitude}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-bold text-xs rounded-xl shadow flex items-center justify-center gap-1.5 transition-premium cursor-pointer"
-              >
-                <Navigation className="w-4 h-4 shrink-0 text-zinc-950" />
-                Open in Google Maps
-              </a>
-              <span className="text-[8px] text-zinc-550 font-medium text-center block mt-2 leading-none">
-                Handoff navigates directly on Android, iOS, or Web
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
- 
       {/* Floating Bottom Cart Summary Banner */}
       {cart && cart.storeId === id && cart.items.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-50 md:bottom-6 md:left-auto md:right-6 md:w-96 md:rounded-2xl animate-in slide-in-from-bottom duration-300">
