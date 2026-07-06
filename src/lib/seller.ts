@@ -1,11 +1,12 @@
 import { db } from './db';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 /** Default seller record used to satisfy the product ownership constraint. */
-const DEFAULT_SELLER = {
+const DEFAULT_SELLER_BASE = {
   email: 'default.seller@localkart.com',
   name: 'Default Seller',
   phone: '+91 98450 12345',
-  password: 'password123',
   role: 'seller',
   membership: 'Silver Merchant',
 } as const;
@@ -23,7 +24,10 @@ export async function resolveSellerId(sellerId?: string): Promise<string> {
 
   let seller = await db.user.findFirst({ where: { role: 'seller' } });
   if (!seller) {
-    seller = await db.user.create({ data: { ...DEFAULT_SELLER } });
+    const randomPassword = crypto.randomBytes(32).toString('hex');
+    seller = await db.user.create({
+      data: { ...DEFAULT_SELLER_BASE, password: await bcrypt.hash(randomPassword, 12) },
+    });
   }
 
   return seller.id;

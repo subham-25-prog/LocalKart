@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, isDbConnected } from '@/lib/db';
-import { getErrorMessage } from '@/lib/apiHelpers';
+
 
 export async function GET(request: Request) {
   try {
@@ -34,6 +34,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, status: 'Received' });
   } catch (error: unknown) {
     console.error('Error fetching order status:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch order status' }, { status: 500 });
   }
 }

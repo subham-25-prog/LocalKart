@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, isDbConnected } from '@/lib/db';
-import { getErrorMessage } from '@/lib/apiHelpers';
+
 import { resolveSellerId } from '@/lib/seller';
 
 export async function GET(request: Request) {
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, inventory });
   } catch (error: unknown) {
     console.error('Error fetching products:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch products' }, { status: 500 });
   }
 }
 
@@ -143,6 +143,6 @@ export async function POST(request: Request) {
     });
   } catch (error: unknown) {
     console.error('Error creating product:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to create product' }, { status: 500 });
   }
 }

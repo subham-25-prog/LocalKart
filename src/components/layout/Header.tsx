@@ -397,25 +397,7 @@ export default function Header() {
     if (typeof window !== 'undefined') {
       const savedUsers = localStorage.getItem('localkart_registered_users');
       if (!savedUsers) {
-        const defaultUsers = [
-          {
-            name: 'Lokesh Kumar',
-            email: 'lokesh.k@localkart.com',
-            phone: '+91 98765 43210',
-            password: 'password123',
-            role: 'buyer',
-            membership: 'Gold Explorer'
-          },
-          {
-            name: 'Krishna Provisions',
-            email: 'krishna.provisions@localkart.com',
-            phone: '+91 98450 12345',
-            password: 'password123',
-            role: 'seller',
-            membership: 'Silver Merchant'
-          }
-        ];
-        localStorage.setItem('localkart_registered_users', JSON.stringify(defaultUsers));
+        localStorage.setItem('localkart_registered_users', JSON.stringify([]));
       }
     }
   }, [searchParams]);
@@ -899,7 +881,6 @@ export default function Header() {
                           name: loginName.trim(),
                           email: emailKey,
                           phone: loginPhone.trim() || '+91 98765 43210',
-                          password: loginPassword,
                           role: loginRole,
                           membership: data.user.membership
                         });
@@ -971,7 +952,6 @@ export default function Header() {
                         name: loginName.trim(),
                         email: emailKey,
                         phone: loginPhone.trim() || '+91 98765 43210',
-                        password: loginPassword,
                         role: loginRole,
                         membership: loginRole === 'seller' ? 'Silver Merchant' : 'Silver Explorer'
                       };
@@ -983,8 +963,8 @@ export default function Header() {
                       router.push(newUser.role === 'seller' ? '/seller' : '/');
                     } else {
                       const foundUser = registeredUsers.find((u: any) => u.email === emailKey && u.role === loginRole);
-                      if (!foundUser || foundUser.password !== loginPassword) {
-                        setLoginError('Incorrect credentials. Fallback verification failed.');
+                      if (!foundUser) {
+                        setLoginError('No account found. Server is offline — only registered accounts available.');
                         return;
                       }
                       setSession(foundUser as any);
@@ -1085,7 +1065,7 @@ export default function Header() {
                   <div className="flex justify-between items-center">
                     <label className="text-[10px] uppercase font-extrabold text-gray-400 tracking-wider">Password</label>
                     {!isRegistering && (
-                      <a href="#" onClick={(e) => { e.preventDefault(); alert("Hint: Default accounts password is 'password123'"); }} className="text-[10px] text-orange-600 font-bold hover:underline">
+                      <a href="#" onClick={(e) => { e.preventDefault(); alert('Please use the password you set during registration.'); }} className="text-[10px] text-orange-600 font-bold hover:underline">
                         Forgot Password?
                       </a>
                     )}

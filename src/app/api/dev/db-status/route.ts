@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
 export async function GET() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   const databaseUrl = process.env.DATABASE_URL || '';
   const isPrismaConfigured = !!databaseUrl;
   
@@ -45,7 +49,7 @@ export async function GET() {
     isPrismaConfigured,
     dbReachable,
     connectionError,
-    databaseUrl: databaseUrl ? `${databaseUrl.split('@')[1] || 'localhost'}` : 'Not Configured', // Obfuscate password
+    databaseUrl: databaseUrl ? 'configured' : 'Not Configured',
     stats,
   });
 }

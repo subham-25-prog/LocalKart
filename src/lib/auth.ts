@@ -9,6 +9,16 @@ export interface LocalKartUser {
   membership?: string;
 }
 
+function generateToken(): string {
+  const array = new Uint8Array(32);
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(array);
+  } else {
+    for (let i = 0; i < array.length; i++) array[i] = Math.floor(Math.random() * 256);
+  }
+  return Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 const SESSION_KEY = 'localkart_user';
 const TOKEN_KEY = 'localkart_auth_token';
 const SESSION_EVENT = 'localkart_user_updated';
@@ -29,7 +39,7 @@ export function getStoredUser(): LocalKartUser | null {
 
 export function setSession(user: LocalKartUser, token?: string) {
   if (typeof window === 'undefined') return;
-  const authToken = token || `local_${user.role}_${Date.now()}`;
+  const authToken = token || generateToken();
   localStorage.setItem(SESSION_KEY, JSON.stringify(user));
   localStorage.setItem(TOKEN_KEY, authToken);
   document.cookie = `${TOKEN_KEY}=${authToken}; path=/; max-age=604800; SameSite=Lax`;
