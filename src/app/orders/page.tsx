@@ -29,7 +29,7 @@ export default function OrdersPage() {
           return;
         }
       } catch (err) {
-        console.warn("Database fetch failed, loading local orders instead.");
+        console.warn("Database fetch failed, loading local orders instead.", err);
       }
 
       const savedOrders = localStorage.getItem('localkart_vendor_orders');
