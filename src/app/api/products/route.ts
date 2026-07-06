@@ -1,25 +1,14 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Unknown error';
-}
+import { db, isDbConnected } from '@/lib/db';
+import { getErrorMessage } from '@/lib/apiHelpers';
+import { resolveSellerId } from '@/lib/seller';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const storeId = searchParams.get('storeId');
 
-    // Check database connection
-    let dbConnected = false;
-    try {
-      await db.$queryRaw`SELECT 1`;
-      dbConnected = true;
-    } catch {
-      dbConnected = false;
-    }
-
-    if (!dbConnected) {
+    if (!(await isDbConnected())) {
       return NextResponse.json({ success: false, error: 'PostgreSQL database offline. Switching to client-side localStorage fallback.' }, { status: 503 });
     }
 
@@ -47,7 +36,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, inventory });
   } catch (error: unknown) {
     console.error('Error fetching products:', error);
-    return NextResponse.json({ success: false, error: errorMessage(error) }, { status: 550 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 550 });
   }
 }
 
@@ -56,16 +45,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, category, price, stockCount, image, barcode, storeId } = body;
 
-    // Check database connection
-    let dbConnected = false;
-    try {
-      await db.$queryRaw`SELECT 1`;
-      dbConnected = true;
-    } catch {
-      dbConnected = false;
-    }
-
-    if (!dbConnected) {
+    if (!(await isDbConnected())) {
       return NextResponse.json({ success: false, error: 'PostgreSQL database offline. Switching to client-side localStorage fallback.' }, { status: 503 });
     }
 
@@ -74,19 +54,7 @@ export async function POST(request: Request) {
     }
 
     // 1. Ensure we have a valid seller user in the database to satisfy constraint
-    let seller = await db.user.findFirst({ where: { role: 'seller' } });
-    if (!seller) {
-      seller = await db.user.create({
-        data: {
-          email: 'default.seller@localkart.com',
-          name: 'Default Seller',
-          phone: '+91 98450 12345',
-          password: 'password123',
-          role: 'seller',
-          membership: 'Silver Merchant'
-        }
-      });
-    }
+    const sellerId = await resolveSellerId();
 
     // 2. Ensure we have a valid Store in the database to satisfy constraint
     const targetStoreId = storeId || 'store-krishnadairy';
@@ -133,7 +101,7 @@ export async function POST(request: Request) {
           barcode: resolvedBarcode,
           price: parseFloat(price),
           stock: parseInt(stockCount),
-          sellerId: seller.id
+          sellerId
         }
       });
     }
@@ -175,6 +143,6 @@ export async function POST(request: Request) {
     });
   } catch (error: unknown) {
     console.error('Error creating product:', error);
-    return NextResponse.json({ success: false, error: errorMessage(error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }

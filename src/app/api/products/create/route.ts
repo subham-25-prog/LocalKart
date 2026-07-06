@@ -1,28 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-
-async function resolveSellerId(sellerId?: string) {
-  if (sellerId) {
-    const seller = await db.user.findUnique({ where: { id: sellerId } });
-    if (seller) return seller.id;
-  }
-
-  let seller = await db.user.findFirst({ where: { role: 'seller' } });
-  if (!seller) {
-    seller = await db.user.create({
-      data: {
-        email: 'default.seller@localkart.com',
-        name: 'Default Seller',
-        phone: '+91 98450 12345',
-        password: 'password123',
-        role: 'seller',
-        membership: 'Silver Merchant',
-      },
-    });
-  }
-
-  return seller.id;
-}
+import { resolveSellerId } from '@/lib/seller';
 
 export async function POST(request: Request) {
   try {

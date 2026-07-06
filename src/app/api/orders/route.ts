@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, isDbConnected } from '@/lib/db';
+import { getErrorMessage } from '@/lib/apiHelpers';
 
 export async function GET(request: Request) {
   try {
@@ -7,16 +8,7 @@ export async function GET(request: Request) {
     const storeId = searchParams.get('storeId');
     const buyerEmail = searchParams.get('buyerEmail');
 
-    // Check database connection
-    let dbConnected = false;
-    try {
-      await db.$queryRaw`SELECT 1`;
-      dbConnected = true;
-    } catch (e) {
-      console.warn("Postgres is unreachable, orders api falling back to local storage sync:", e);
-    }
-
-    if (dbConnected) {
+    if (await isDbConnected()) {
       let orders = [];
       if (storeId) {
         orders = await (db as any).order.findMany({
@@ -53,9 +45,9 @@ export async function GET(request: Request) {
     // Failover fallback mode (return empty success so client reads local storage)
     return NextResponse.json({ success: true, orders: [], fallback: true });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching orders:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -70,16 +62,7 @@ export async function POST(request: Request) {
 
     const orderId = `LK-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // Check database connection
-    let dbConnected = false;
-    try {
-      await db.$queryRaw`SELECT 1`;
-      dbConnected = true;
-    } catch (e) {
-      console.warn("Postgres is unreachable, order creation api using local sync fallback:", e);
-    }
-
-    if (dbConnected) {
+    if (await isDbConnected()) {
       // 1. Create order record
       const newOrder = await (db as any).order.create({
         data: {
@@ -138,8 +121,8 @@ export async function POST(request: Request) {
       warning: "PostgreSQL offline. Simulated local provisions order synced."
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error placing order:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }

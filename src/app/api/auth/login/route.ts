@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, isDbConnected } from '@/lib/db';
+import { getErrorMessage } from '@/lib/apiHelpers';
 
 export async function POST(request: Request) {
   try {
@@ -12,16 +13,7 @@ export async function POST(request: Request) {
 
     const emailKey = email.toLowerCase().trim();
 
-    // Check if Postgres database is reachable
-    let dbConnected = false;
-    try {
-      await db.$queryRaw`SELECT 1`;
-      dbConnected = true;
-    } catch (e) {
-      console.warn("Postgres is unreachable, using failover memory auth:", e);
-    }
-
-    if (dbConnected) {
+    if (await isDbConnected()) {
       // Postgres Mode: verify credentials
       const foundUser = await (db as any).user.findFirst({
         where: {
@@ -65,8 +57,8 @@ export async function POST(request: Request) {
       warning: "PostgreSQL offline. Simulated local profile session initialized."
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error during login:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }
