@@ -11,7 +11,7 @@ import {
   getBannerGradient,
   getCategoryUnsplashImage,
 } from '@/lib/places';
-import { getErrorMessage, parseGeoParams } from '@/lib/apiHelpers';
+import { parseGeoParams } from '@/lib/apiHelpers';
 
 // Dynamically imports any native Google Place on click, registers and caches it in PostgreSQL
 async function importStoreByPlaceId(placeId: string, lat: number, lng: number, apiKey: string, dbMode?: string) {
@@ -194,7 +194,7 @@ export async function GET(
     
     const { searchParams } = new URL(request.url);
     const { lat, lng, dbMode } = parseGeoParams(searchParams);
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
     // 1. Fetch store from services
     let data = await getStoreDetails(id, lat, lng, dbMode);
@@ -285,7 +285,7 @@ export async function GET(
   } catch (error: unknown) {
     console.error('Error in store details API:', error);
     return NextResponse.json(
-      { success: false, error: getErrorMessage(error, 'Internal Server Error') },
+      { success: false, error: 'Failed to fetch store details' },
       { status: 500 }
     );
   }

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { readString, fetchOpenFoodFactsProduct } from '@/lib/openFoodFacts';
-import { getErrorMessage } from '@/lib/apiHelpers';
+
 
 export async function GET(
   _request: Request,
@@ -57,6 +57,6 @@ export async function GET(
     return NextResponse.json({ success: false, error: 'Product barcode not found in database or external registry' }, { status: 404 });
   } catch (error: unknown) {
     console.error('Error fetching scanned product:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to scan product' }, { status: 500 });
   }
 }

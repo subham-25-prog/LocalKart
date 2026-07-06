@@ -1,14 +1,21 @@
 import { NextResponse } from 'next/server';
 import { db, isDbConnected } from '@/lib/db';
-import { getErrorMessage } from '@/lib/apiHelpers';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { name, email, phone, password, role } = body;
 
+    const validRoles = ['buyer', 'seller'];
     if (!name || !email || !password || !role) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
+    if (!validRoles.includes(role)) {
+      return NextResponse.json({ success: false, error: 'Invalid role' }, { status: 400 });
+    }
+    if (password.length < 8) {
+      return NextResponse.json({ success: false, error: 'Password must be at least 8 characters' }, { status: 400 });
     }
 
     const emailKey = email.toLowerCase().trim();
@@ -30,7 +37,7 @@ export async function POST(request: Request) {
           name,
           email: emailKey,
           phone: phone || '+91 98765 43210',
-          password, // Mock plain password storage
+          password: await bcrypt.hash(password, 12),
           role,
           membership
         }
@@ -66,6 +73,6 @@ export async function POST(request: Request) {
 
   } catch (error: unknown) {
     console.error('Error during registration:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Registration failed' }, { status: 500 });
   }
 }

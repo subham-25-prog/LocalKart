@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { searchProducts } from '@/lib/services';
-import { getErrorMessage, parseGeoParams } from '@/lib/apiHelpers';
+import { parseGeoParams } from '@/lib/apiHelpers';
 
 export async function GET(request: Request) {
   try {
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   } catch (error: unknown) {
     console.error('Error in search API:', error);
     return NextResponse.json(
-      { success: false, error: getErrorMessage(error, 'Internal Server Error') },
+      { success: false, error: 'Search failed' },
       { status: 500 }
     );
   }

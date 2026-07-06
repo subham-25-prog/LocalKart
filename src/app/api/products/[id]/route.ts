@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getProductAvailability } from '@/lib/services';
 import { db } from '@/lib/db';
-import { getErrorMessage, parseGeoParams } from '@/lib/apiHelpers';
+import { parseGeoParams } from '@/lib/apiHelpers';
 
 export async function GET(
   request: Request,
@@ -26,7 +26,7 @@ export async function GET(
   } catch (error: unknown) {
     console.error('Error in product availability API:', error);
     return NextResponse.json(
-      { success: false, error: getErrorMessage(error, 'Internal Server Error') },
+      { success: false, error: 'Failed to fetch product availability' },
       { status: 500 }
     );
   }
@@ -62,7 +62,7 @@ export async function PATCH(
     return NextResponse.json({ success: true, updated });
   } catch (error: unknown) {
     console.error('Error updating inventory item:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to update inventory item' }, { status: 500 });
   }
 }
 
@@ -89,6 +89,6 @@ export async function DELETE(
     return NextResponse.json({ success: true, message: 'Item deleted from inventory successfully' });
   } catch (error: unknown) {
     console.error('Error deleting inventory item:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to delete inventory item' }, { status: 500 });
   }
 }

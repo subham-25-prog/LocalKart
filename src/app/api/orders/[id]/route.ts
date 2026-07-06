@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, isDbConnected } from '@/lib/db';
-import { getErrorMessage } from '@/lib/apiHelpers';
+
 
 export async function GET(
   request: Request,
@@ -27,7 +27,7 @@ export async function GET(
 
   } catch (error: unknown) {
     console.error('Error fetching order:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch order' }, { status: 500 });
   }
 }
 
@@ -40,8 +40,9 @@ export async function PATCH(
     const body = await request.json();
     const { status } = body; // "Received" | "Preparing" | "Dispatched" | "Delivered"
 
-    if (!status) {
-      return NextResponse.json({ success: false, error: 'Missing required status parameter' }, { status: 400 });
+    const validStatuses = ['Received', 'Preparing', 'Dispatched', 'Delivered'];
+    if (!status || !validStatuses.includes(status)) {
+      return NextResponse.json({ success: false, error: 'Invalid or missing status parameter' }, { status: 400 });
     }
 
     if (await isDbConnected()) {
@@ -62,6 +63,6 @@ export async function PATCH(
 
   } catch (error: unknown) {
     console.error('Error updating order:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to update order' }, { status: 500 });
   }
 }

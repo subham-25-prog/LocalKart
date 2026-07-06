@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server';
 import { db, isDbConnected } from '@/lib/db';
-import { getErrorMessage } from '@/lib/apiHelpers';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { email, password, role } = body;
 
+    const validRoles = ['buyer', 'seller'];
     if (!email || !password || !role) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
+    if (!validRoles.includes(role)) {
+      return NextResponse.json({ success: false, error: 'Invalid role' }, { status: 400 });
     }
 
     const emailKey = email.toLowerCase().trim();
@@ -26,7 +30,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: `No ${role} account found with this email. Please check your credentials or create a new account.` }, { status: 400 });
       }
 
-      if (foundUser.password !== password) {
+      const passwordValid = await bcrypt.compare(password, foundUser.password);
+      if (!passwordValid) {
         return NextResponse.json({ success: false, error: 'Incorrect password. Please try again.' }, { status: 401 });
       }
 
@@ -59,6 +64,6 @@ export async function POST(request: Request) {
 
   } catch (error: unknown) {
     console.error('Error during login:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Login failed' }, { status: 500 });
   }
 }

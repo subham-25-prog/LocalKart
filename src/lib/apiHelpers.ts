@@ -1,10 +1,18 @@
 /** Shared helpers for API route request parsing and error handling. */
 
-/** Extracts a human-readable message from an unknown thrown value. */
+/** Extracts a human-readable message from an unknown thrown value for server-side logging only. */
 export function getErrorMessage(error: unknown, fallback = 'Unknown error'): string {
   if (error instanceof Error) return error.message || fallback;
   if (typeof error === 'string') return error;
   return fallback;
+}
+
+/**
+ * Returns a safe, generic error message suitable for API responses.
+ * Never exposes internal error details to clients.
+ */
+export function safeErrorResponse(context: string): string {
+  return `Failed to ${context}`;
 }
 
 export interface GeoParams {

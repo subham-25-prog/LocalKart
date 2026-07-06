@@ -10,7 +10,7 @@ import {
   getBannerGradient,
   getCategoryUnsplashImage,
 } from '@/lib/places';
-import { getErrorMessage, parseGeoParams } from '@/lib/apiHelpers';
+import { parseGeoParams } from '@/lib/apiHelpers';
 
 export async function GET(request: Request) {
   try {
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     }
 
     // 2. Fetch live results from Google Places API
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     let finalStoresList: any[] = [];
 
     if (!apiKey) {
@@ -233,6 +233,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, stores: finalStoresList, source: apiKey ? 'google_places_api' : 'simulated' });
   } catch (error: unknown) {
     console.error('Hyperlocal stores discovery API failed:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error, 'Internal Server Error') }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch stores' }, { status: 500 });
   }
 }
