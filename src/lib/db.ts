@@ -18,3 +18,17 @@ export const db =
   });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db;
+
+/**
+ * Probes the database with a lightweight `SELECT 1` and reports whether it is
+ * reachable. API routes use this to decide between live Prisma queries and
+ * their offline localStorage fallback responses. Never throws.
+ */
+export async function isDbConnected(): Promise<boolean> {
+  try {
+    await db.$queryRaw`SELECT 1`;
+    return true;
+  } catch {
+    return false;
+  }
+}

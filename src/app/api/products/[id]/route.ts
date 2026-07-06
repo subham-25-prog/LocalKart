@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getProductAvailability } from '@/lib/services';
 import { db } from '@/lib/db';
+import { getErrorMessage, parseGeoParams } from '@/lib/apiHelpers';
 
 export async function GET(
   request: Request,
@@ -11,9 +12,7 @@ export async function GET(
     const { id } = resolvedParams;
     
     const { searchParams } = new URL(request.url);
-    const lat = parseFloat(searchParams.get('lat') || '12.9716');
-    const lng = parseFloat(searchParams.get('lng') || '77.6400');
-    const dbMode = searchParams.get('db_mode') || 'postgres';
+    const { lat, lng, dbMode } = parseGeoParams(searchParams);
 
     const data = await getProductAvailability(id, lat, lng, dbMode);
     if (!data) {
@@ -25,10 +24,9 @@ export async function GET(
 
     return NextResponse.json({ success: true, ...data });
   } catch (error: unknown) {
-    const err = error as Error;
-    console.error('Error in product availability API:', err);
+    console.error('Error in product availability API:', error);
     return NextResponse.json(
-      { success: false, error: err.message || 'Internal Server Error' },
+      { success: false, error: getErrorMessage(error, 'Internal Server Error') },
       { status: 500 }
     );
   }
@@ -62,9 +60,9 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true, updated });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating inventory item:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -89,8 +87,8 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true, message: 'Item deleted from inventory successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting inventory item:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, isDbConnected } from '@/lib/db';
+import { getErrorMessage } from '@/lib/apiHelpers';
 
 export async function GET(request: Request) {
   try {
@@ -15,15 +16,7 @@ export async function GET(request: Request) {
     }
 
     // Try DB first
-    let dbConnected = false;
-    try {
-      await db.$queryRaw`SELECT 1`;
-      dbConnected = true;
-    } catch (e) {
-      console.warn('Postgres offline, falling back to local storage for order status', e);
-    }
-
-    if (dbConnected) {
+    if (await isDbConnected()) {
       const order = await (db as any).order.findUnique({
         where: { id: orderId },
         select: { status: true }
@@ -39,8 +32,8 @@ export async function GET(request: Request) {
     // locally stored orders array via a query param (e.g., ?cached=1) – but for simplicity we return
     // a generic fallback response.
     return NextResponse.json({ success: true, status: 'Received' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching order status:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }

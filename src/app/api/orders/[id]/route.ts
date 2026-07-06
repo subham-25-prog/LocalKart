@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, isDbConnected } from '@/lib/db';
+import { getErrorMessage } from '@/lib/apiHelpers';
 
 export async function GET(
   request: Request,
@@ -8,16 +9,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    // Check database connection
-    let dbConnected = false;
-    try {
-      await db.$queryRaw`SELECT 1`;
-      dbConnected = true;
-    } catch (e) {
-      dbConnected = false;
-    }
-
-    if (dbConnected) {
+    if (await isDbConnected()) {
       const order = await (db as any).order.findUnique({
         where: { id },
         include: { items: true }
@@ -33,9 +25,9 @@ export async function GET(
     // Fallback response
     return NextResponse.json({ success: false, error: 'Postgres offline. Reading localized details instead.' }, { status: 503 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching order:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -52,16 +44,7 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: 'Missing required status parameter' }, { status: 400 });
     }
 
-    // Check database connection
-    let dbConnected = false;
-    try {
-      await db.$queryRaw`SELECT 1`;
-      dbConnected = true;
-    } catch (e) {
-      dbConnected = false;
-    }
-
-    if (dbConnected) {
+    if (await isDbConnected()) {
       const updatedOrder = await (db as any).order.update({
         where: { id },
         data: { status }
@@ -77,8 +60,8 @@ export async function PATCH(
       warning: "Postgres offline. Local state updated successfully."
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating order:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }
