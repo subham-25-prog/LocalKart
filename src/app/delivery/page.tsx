@@ -53,7 +53,9 @@ export default function OrderDeliveryTracking() {
         try {
           const parsed = JSON.parse(savedLoc);
           setAddress(parsed.name || 'Indiranagar Gate');
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Failed to parse saved location for delivery address:', e);
+        }
       }
     };
 

@@ -176,7 +176,9 @@ export default function SellerPage() {
     if (savedInv) {
       try {
         setInventory(JSON.parse(savedInv));
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Failed to parse saved seller inventory:', e);
+      }
     } else {
       const storeId = 'store-krishnadairy';
       const storeProds = STORE_PRODUCTS.filter((sp) => sp.storeId === storeId);
@@ -219,14 +221,16 @@ export default function SellerPage() {
           return;
         }
       } catch (e) {
-        console.warn("Postgres seller orders API query failed. Fallback to localStorage.");
+        console.warn("Postgres seller orders API query failed. Fallback to localStorage.", e);
       }
 
       const savedOrders = localStorage.getItem('localkart_vendor_orders');
       if (savedOrders) {
         try {
           setOrders(JSON.parse(savedOrders));
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Failed to parse saved vendor orders:', e);
+        }
       } else {
         const defaultOrders: OrderItem[] = [
           {

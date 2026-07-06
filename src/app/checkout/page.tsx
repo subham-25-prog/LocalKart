@@ -121,7 +121,9 @@ export default function FastCheckoutFlow() {
           buyerName = parsed.name || buyerName;
           buyerPhone = parsed.phone || buyerPhone;
           buyerEmail = parsed.email || buyerEmail;
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Failed to parse saved user, using defaults:', e);
+        }
       }
 
       const savedLoc = localStorage.getItem('localkart_location');
@@ -129,7 +131,9 @@ export default function FastCheckoutFlow() {
         try {
           const parsed = JSON.parse(savedLoc);
           address = parsed.name || address;
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Failed to parse saved location, using default address:', e);
+        }
       }
     }
 
@@ -159,7 +163,9 @@ export default function FastCheckoutFlow() {
       const savedOrders = localStorage.getItem('localkart_vendor_orders');
       let vendorOrders = [];
       if (savedOrders) {
-        try { vendorOrders = JSON.parse(savedOrders); } catch (e) {}
+        try { vendorOrders = JSON.parse(savedOrders); } catch (e) {
+          console.warn('Failed to parse stored vendor orders, resetting list:', e);
+        }
       }
       
       const newOrder = {
@@ -192,7 +198,9 @@ export default function FastCheckoutFlow() {
       const savedOrders = localStorage.getItem('localkart_vendor_orders');
       let vendorOrders = [];
       if (savedOrders) {
-        try { vendorOrders = JSON.parse(savedOrders); } catch (e) {}
+        try { vendorOrders = JSON.parse(savedOrders); } catch (e) {
+          console.warn('Failed to parse stored vendor orders, resetting list:', e);
+        }
       }
 
       const orderId = `LK-${Math.floor(1000 + Math.random() * 9000)}`;

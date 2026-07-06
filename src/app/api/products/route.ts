@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, inventory });
   } catch (error: unknown) {
     console.error('Error fetching products:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 550 });
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }
 

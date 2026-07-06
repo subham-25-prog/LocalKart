@@ -61,7 +61,9 @@ export default function VendorDashboard() {
     if (savedUser) {
       try {
         currentUser = JSON.parse(savedUser);
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Failed to parse saved user during vendor auth check:', e);
+      }
     }
     setUser(currentUser);
     setAuthChecked(true);
@@ -143,7 +145,7 @@ export default function VendorDashboard() {
         console.warn("Database PATCH status update failed. Synchronizing locally.");
       }
     } catch (e) {
-      console.warn("Database order status update threw an error, fallback to localized storage sync.");
+      console.warn("Database order status update threw an error, fallback to localized storage sync.", e);
     }
 
     const updated = orders.map((ord) => {
